@@ -1,0 +1,296 @@
+<!-- web/templates/manual.html -->
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zavlažovací systém - Manuálne ovládanie</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/manual.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 Manuálne ovládanie</h1>
+            <div class="datetime" id="current-datetime">--.--.---- --:--:--</div>
+        </header>
+
+        <nav class="main-nav">
+            <a href="/">Dashboard</a>
+            <a href="/schedule">Plány</a>
+            <a href="/manual" class="active">Manuálne ovládanie</a>
+            <a href="/settings">Nastavenia</a>
+        </nav>
+
+        <div class="manual-container">
+            <!-- Stavový panel -->
+            <div class="status-panel">
+                <div class="status-item">
+                    <span class="status-label">Režim systému:</span>
+                    <span class="status-value" id="system-mode">---</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Aktuálny čas:</span>
+                    <span class="status-value" id="current-time">---</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Posledná akcia:</span>
+                    <span class="status-value" id="last-action">---</span>
+                </div>
+            </div>
+
+            <!-- Núdzové ovládanie -->
+            <div class="card emergency-card">
+                <h2>🚨 Núdzové ovládanie</h2>
+                <div class="emergency-controls">
+                    <button class="btn btn-emergency" id="emergencyStopAll">
+                        <span class="btn-icon">⛔</span>
+                        NÚDZOVÉ ZASTAVENIE VŠETKÉHO
+                    </button>
+                    <button class="btn btn-warning" id="resetSystem">
+                        <span class="btn-icon">↻</span>
+                        Reštart systému
+                    </button>
+                </div>
+            </div>
+
+            <div class="manual-grid">
+                <!-- Tlakové čerpadlo a ventily -->
+                <div class="card">
+                    <h2>💧 Tlakové čerpadlo a ventily</h2>
+                    
+                    <!-- Režim tlakového čerpadla -->
+                    <div class="mode-selector">
+                        <span class="mode-label">Režim:</span>
+                        <div class="mode-buttons">
+                            <button class="mode-btn mode-auto active" data-pump="tlakove" data-mode="auto">
+                                🔄 AUTO
+                            </button>
+                            <button class="mode-btn mode-manual" data-pump="tlakove" data-mode="manual">
+                                👤 MANUÁL
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Ovládanie čerpadla -->
+                    <div class="pump-controls">
+                        <div class="pump-status">
+                            <span class="status-led" id="tlakove-led">●</span>
+                            <span class="pump-state" id="tlakove-state">Vypnuté</span>
+                        </div>
+                        <div class="pump-buttons">
+                            <button class="btn btn-success pump-start" id="tlakove-start" disabled>
+                                <span class="btn-icon">▶</span>
+                                Štart
+                            </button>
+                            <button class="btn btn-danger pump-stop" id="tlakove-stop" disabled>
+                                <span class="btn-icon">⏹</span>
+                                Stop
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Ventily -->
+                    <h3 class="section-subtitle">Regulácia ventilov</h3>
+                    <div class="valves-grid">
+                        <!-- Ventil 1 -->
+                        <div class="valve-card" id="valve1">
+                            <div class="valve-header">
+                                <h4>Ventil 1</h4>
+                                <span class="valve-status-badge closed" id="valve1-status">Zatvorený</span>
+                            </div>
+                            <div class="valve-pressure-control">
+                                <label>Tlak: <span id="valve1-pressure-value">0%</span></label>
+                                <input type="range" class="valve-pressure-slider" id="valve1-pressure" 
+                                       min="0" max="100" value="0" step="5" disabled>
+                            </div>
+                            <div class="valve-buttons">
+                                <button class="btn btn-small btn-success valve-open" data-valve="1" disabled>
+                                    Otvoriť
+                                </button>
+                                <button class="btn btn-small btn-danger valve-close" data-valve="1" disabled>
+                                    Zatvoriť
+                                </button>
+                            </div>
+                            <div class="pressure-indicator">
+                                <div class="pressure-bar" id="valve1-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Ventil 2 -->
+                        <div class="valve-card" id="valve2">
+                            <div class="valve-header">
+                                <h4>Ventil 2</h4>
+                                <span class="valve-status-badge closed" id="valve2-status">Zatvorený</span>
+                            </div>
+                            <div class="valve-pressure-control">
+                                <label>Tlak: <span id="valve2-pressure-value">0%</span></label>
+                                <input type="range" class="valve-pressure-slider" id="valve2-pressure" 
+                                       min="0" max="100" value="0" step="5" disabled>
+                            </div>
+                            <div class="valve-buttons">
+                                <button class="btn btn-small btn-success valve-open" data-valve="2" disabled>
+                                    Otvoriť
+                                </button>
+                                <button class="btn btn-small btn-danger valve-close" data-valve="2" disabled>
+                                    Zatvoriť
+                                </button>
+                            </div>
+                            <div class="pressure-indicator">
+                                <div class="pressure-bar" id="valve2-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Ventil 3 -->
+                        <div class="valve-card" id="valve3">
+                            <div class="valve-header">
+                                <h4>Ventil 3</h4>
+                                <span class="valve-status-badge closed" id="valve3-status">Zatvorený</span>
+                            </div>
+                            <div class="valve-pressure-control">
+                                <label>Tlak: <span id="valve3-pressure-value">0%</span></label>
+                                <input type="range" class="valve-pressure-slider" id="valve3-pressure" 
+                                       min="0" max="100" value="0" step="5" disabled>
+                            </div>
+                            <div class="valve-buttons">
+                                <button class="btn btn-small btn-success valve-open" data-valve="3" disabled>
+                                    Otvoriť
+                                </button>
+                                <button class="btn btn-small btn-danger valve-close" data-valve="3" disabled>
+                                    Zatvoriť
+                                </button>
+                            </div>
+                            <div class="pressure-indicator">
+                                <div class="pressure-bar" id="valve3-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Ventil 4 -->
+                        <div class="valve-card" id="valve4">
+                            <div class="valve-header">
+                                <h4>Ventil 4</h4>
+                                <span class="valve-status-badge closed" id="valve4-status">Zatvorený</span>
+                            </div>
+                            <div class="valve-pressure-control">
+                                <label>Tlak: <span id="valve4-pressure-value">0%</span></label>
+                                <input type="range" class="valve-pressure-slider" id="valve4-pressure" 
+                                       min="0" max="100" value="0" step="5" disabled>
+                            </div>
+                            <div class="valve-buttons">
+                                <button class="btn btn-small btn-success valve-open" data-valve="4" disabled>
+                                    Otvoriť
+                                </button>
+                                <button class="btn btn-small btn-danger valve-close" data-valve="4" disabled>
+                                    Zatvoriť
+                                </button>
+                            </div>
+                            <div class="pressure-indicator">
+                                <div class="pressure-bar" id="valve4-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nasávacie čerpadlo -->
+                <div class="card">
+                    <h2>💦 Nasávacie čerpadlo</h2>
+                    
+                    <!-- Režim nasávacieho čerpadla -->
+                    <div class="mode-selector">
+                        <span class="mode-label">Režim:</span>
+                        <div class="mode-buttons">
+                            <button class="mode-btn mode-auto active" data-pump="nasavacie" data-mode="auto">
+                                🔄 AUTO
+                            </button>
+                            <button class="mode-btn mode-manual" data-pump="nasavacie" data-mode="manual">
+                                👤 MANUÁL
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Ovládanie nasávacieho čerpadla -->
+                    <div class="pump-controls">
+                        <div class="pump-status">
+                            <span class="status-led" id="nasavacie-led">●</span>
+                            <span class="pump-state" id="nasavacie-state">Vypnuté</span>
+                        </div>
+                        <div class="pump-buttons">
+                            <button class="btn btn-success pump-start" id="nasavacie-start" disabled>
+                                <span class="btn-icon">▶</span>
+                                Štart
+                            </button>
+                            <button class="btn btn-danger pump-stop" id="nasavacie-stop" disabled>
+                                <span class="btn-icon">⏹</span>
+                                Stop
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Informácie o hladine -->
+                    <div class="level-info">
+                        <h3>Stav nádrže</h3>
+                        <div class="level-indicators">
+                            <div class="level-item">
+                                <span class="level-label">Spodný senzor:</span>
+                                <span class="level-value" id="spodny-senzor">---</span>
+                            </div>
+                            <div class="level-item">
+                                <span class="level-label">Horný senzor:</span>
+                                <span class="level-value" id="horny-senzor">---</span>
+                            </div>
+                        </div>
+                        <div class="water-level-bar">
+                            <div class="water-level-fill" id="water-level-fill" style="height: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rýchle predvoľby -->
+            <div class="card">
+                <h2>⚡ Rýchle predvoľby</h2>
+                <div class="preset-buttons">
+                    <button class="preset-btn" data-okruh="1" data-tlak="50">
+                        Okruh 1 (50%)
+                    </button>
+                    <button class="preset-btn" data-okruh="2" data-tlak="70">
+                        Okruh 2 (70%)
+                    </button>
+                    <button class="preset-btn" data-okruh="3" data-tlak="60">
+                        Okruh 3 (60%)
+                    </button>
+                    <button class="preset-btn" data-okruh="4" data-tlak="80">
+                        Okruh 4 (80%)
+                    </button>
+                    <button class="preset-btn preset-all" id="vsetky-ventily-otvor">
+                        Otvoriť všetky (50%)
+                    </button>
+                    <button class="preset-btn preset-danger" id="vsetky-ventily-zatvor">
+                        Zatvoriť všetky
+                    </button>
+                </div>
+            </div>
+
+			<!-- Potvrdzovací dialog -->
+			<div id="confirmDialog" class="modal-overlay" style="display: none;">
+				<div class="modal-container">
+					<div class="modal-header">
+						<h3>Potvrdenie akcie</h3>
+						<button class="modal-close">&times;</button>
+					</div>
+					<div class="modal-body">
+						<p id="confirmMessage">Ste si istý?</p>
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-secondary" id="confirmNo">Nie</button>
+						<button class="btn btn-success" id="confirmYes">Áno</button>
+					</div>
+				</div>
+			</div>			
+        </div>
+    </div>
+
+    <script src="/static/js/manual.js"></script>
+</body>
+</html>

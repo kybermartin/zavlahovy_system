@@ -1,0 +1,95 @@
+<!-- web/templates/dashboard.html -->
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zavlažovací systém - Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌱 Zavlažovací systém</h1>
+            <div class="datetime" id="current-datetime">--.--.---- --:--:--</div>
+        </header>
+
+        <nav class="main-nav">
+            <a href="/" class="active">Dashboard</a>
+            <a href="/schedule">Plány</a>
+            <a href="/manual">Manuálne ovládanie</a>
+            <a href="/settings">Nastavenia</a>
+        </nav>
+
+        <div class="status-cards">
+            <!-- Tlakové čerpadlo -->
+            <div class="card pump-card" id="pump-tlakove">
+                <h2>Tlakové čerpadlo</h2>
+                <div class="status-indicator" id="tlakove-status">Načítavam...</div>
+                <div class="pump-details">
+                    <div class="detail-item">
+                        <span class="label">Režim:</span>
+                        <span class="value" id="tlakove-mode">---</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Stav:</span>
+                        <span class="value" id="tlakove-state">---</span>
+                    </div>
+                    <div class="detail-item" id="tlakove-okruh-container" style="display: none;">
+                        <span class="label">Aktívny okruh:</span>
+                        <span class="value" id="tlakove-okruh">-</span>
+                    </div>
+                    <div class="detail-item" id="tlakove-tlak-container" style="display: none;">
+                        <span class="label">Tlak:</span>
+                        <span class="value" id="tlakove-tlak">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nasávacie čerpadlo -->
+            <div class="card pump-card" id="pump-nasavacie">
+                <h2>Nasávacie čerpadlo</h2>
+                <div class="status-indicator" id="nasavacie-status">Načítavam...</div>
+                <div class="pump-details">
+                    <div class="detail-item">
+                        <span class="label">Režim:</span>
+                        <span class="value" id="nasavacie-mode">---</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Stav:</span>
+                        <span class="value" id="nasavacie-state">---</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ventily -->
+        <div class="card valves-card">
+            <h2>Stav ventilov</h2>
+            <div class="valves-grid" id="valves-container">
+                <!-- Dynamicky generované -->
+            </div>
+        </div>
+
+        <!-- Aktívny plán -->
+        <div class="card active-plan-card">
+            <h2>Aktívny plán</h2>
+            <div id="active-plan">
+                <p class="no-plan">Žiadny aktívny plán</p>
+            </div>
+        </div>
+
+        <!-- Rýchle ovládanie -->
+        <div class="card quick-controls">
+            <h2>Rýchle ovládanie</h2>
+            <div class="button-group">
+                <button class="btn btn-danger" onclick="emergencyStop()">🚨 NÚDZOVÉ ZASTAVENIE</button>
+                <button class="btn btn-primary" onclick="forceScheduleCheck()">↻ Vynútiť kontrolu plánu</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

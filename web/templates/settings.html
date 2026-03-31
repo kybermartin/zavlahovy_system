@@ -1,0 +1,382 @@
+<!-- web/templates/settings.html -->
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zavlažovací systém - Nastavenia</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/settings.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚙️ Nastavenia systému</h1>
+            <div class="datetime" id="current-datetime">--.--.---- --:--:--</div>
+        </header>
+
+        <nav class="main-nav">
+            <a href="/">Dashboard</a>
+            <a href="/schedule">Plány</a>
+            <a href="/manual">Manuálne ovládanie</a>
+            <a href="/settings" class="active">Nastavenia</a>
+        </nav>
+
+        <div class="settings-container">
+            <!-- Nastavenia času -->
+            <div class="card">
+                <h2>🕐 Nastavenie času</h2>
+                <div class="settings-section">
+                    <div class="current-time-display">
+                        <span class="label">Aktuálny systémový čas:</span>
+                        <span class="value" id="current-system-time">---</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="manual-time">Manuálne nastavenie času:</label>
+                        <div class="time-input-group">
+                            <input type="datetime-local" id="manual-time" class="form-control">
+                            <button class="btn btn-primary" id="set-time">Nastaviť čas</button>
+                        </div>
+                        <small class="form-text">Formát: RRRR-MM-DD HH:MM</small>
+                    </div>
+
+                    <div class="timezone-selector">
+                        <label for="timezone">Časová zóna:</label>
+                        <select id="timezone" class="form-control">
+                            <option value="Europe/Bratislava">Europe/Bratislava (CET/CEST)</option>
+                            <option value="Europe/Prague">Europe/Prague</option>
+                            <option value="Europe/Budapest">Europe/Budapest</option>
+                            <option value="Europe/Vienna">Europe/Vienna</option>
+                            <option value="Europe/Warsaw">Europe/Warsaw</option>
+                            <option value="UTC">UTC</option>
+                        </select>
+                    </div>
+
+                    <div class="rtc-info">
+                        <h3>RTC modul DS3231</h3>
+                        <div class="info-row">
+                            <span class="label">Stav RTC:</span>
+                            <span class="value" id="rtc-status">---</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Čas na RTC:</span>
+                            <span class="value" id="rtc-time">---</span>
+                        </div>
+                        <button class="btn btn-secondary" id="sync-rtc">↻ Synchronizovať RTC s časom RPi</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nastavenia čerpadiel -->
+            <div class="card">
+                <h2>🚰 Nastavenia čerpadiel</h2>
+                
+                <div class="settings-section">
+                    <h3>Tlakové čerpadlo (závlaha)</h3>
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="tlakove-auto-mode" checked>
+                            Automatický režim (riadený plánom)
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="tlakove-start-delay">Oneskorenie štartu (sekundy):</label>
+                        <input type="number" id="tlakove-start-delay" min="0" max="60" value="2" class="form-control">
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Nasávacie čerpadlo</h3>
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="nasavacie-auto-mode" checked>
+                            Automatický režim (riadený hladinou)
+                        </label>
+                    </div>
+                    
+                    <h4>Ochrana pred suchým chodom</h4>
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="dry-run-protection" checked>
+                            Povoliť ochranu pred suchým chodom
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="dry-run-delay">Čas suchého chodu pred vypnutím (sekundy):</label>
+                        <input type="number" id="dry-run-delay" min="5" max="120" value="30" class="form-control">
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Typy senzorov</h3>
+                    <div class="form-group">
+                        <label for="sensor-type">Typ hladinových senzorov:</label>
+                        <select id="sensor-type" class="form-control">
+                            <option value="NO">Normally Open (NO) - 1 = voda</option>
+                            <option value="NC">Normally Closed (NC) - 0 = voda</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nastavenia ventilov -->
+            <div class="card">
+                <h2>🔧 Nastavenia ventilov</h2>
+                
+                <div class="settings-section">
+                    <h3>Kalibrácia servomotorov SG90</h3>
+                    
+                    <div class="servo-calibration" id="servo1-calib">
+                        <h4>Servo 1 (okruh 1)</h4>
+                        <div class="calib-row">
+                            <label>Zatvorená poloha (duty %):</label>
+                            <input type="number" id="servo1-closed" min="2.0" max="5.0" step="0.1" value="2.5" class="form-control small">
+                        </div>
+                        <div class="calib-row">
+                            <label>Otvorená poloha (duty %):</label>
+                            <input type="number" id="servo1-open" min="10.0" max="15.0" step="0.1" value="12.5" class="form-control small">
+                        </div>
+                        <button class="btn btn-small btn-secondary test-servo" data-servo="1">Test servo 1</button>
+                    </div>
+
+                    <div class="servo-calibration" id="servo2-calib">
+                        <h4>Servo 2 (okruh 2)</h4>
+                        <div class="calib-row">
+                            <label>Zatvorená poloha (duty %):</label>
+                            <input type="number" id="servo2-closed" min="2.0" max="5.0" step="0.1" value="2.5" class="form-control small">
+                        </div>
+                        <div class="calib-row">
+                            <label>Otvorená poloha (duty %):</label>
+                            <input type="number" id="servo2-open" min="10.0" max="15.0" step="0.1" value="12.5" class="form-control small">
+                        </div>
+                        <button class="btn btn-small btn-secondary test-servo" data-servo="2">Test servo 2</button>
+                    </div>
+
+                    <div class="servo-calibration" id="servo3-calib">
+                        <h4>Servo 3 (okruh 3)</h4>
+                        <div class="calib-row">
+                            <label>Zatvorená poloha (duty %):</label>
+                            <input type="number" id="servo3-closed" min="2.0" max="5.0" step="0.1" value="2.5" class="form-control small">
+                        </div>
+                        <div class="calib-row">
+                            <label>Otvorená poloha (duty %):</label>
+                            <input type="number" id="servo3-open" min="10.0" max="15.0" step="0.1" value="12.5" class="form-control small">
+                        </div>
+                        <button class="btn btn-small btn-secondary test-servo" data-servo="3">Test servo 3</button>
+                    </div>
+
+                    <div class="servo-calibration" id="servo4-calib">
+                        <h4>Servo 4 (okruh 4)</h4>
+                        <div class="calib-row">
+                            <label>Zatvorená poloha (duty %):</label>
+                            <input type="number" id="servo4-closed" min="2.0" max="5.0" step="0.1" value="2.5" class="form-control small">
+                        </div>
+                        <div class="calib-row">
+                            <label>Otvorená poloha (duty %):</label>
+                            <input type="number" id="servo4-open" min="10.0" max="15.0" step="0.1" value="12.5" class="form-control small">
+                        </div>
+                        <button class="btn btn-small btn-secondary test-servo" data-servo="4">Test servo 4</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nastavenia LCD -->
+            <div class="card">
+                <h2>🖥️ Nastavenia LCD</h2>
+                
+                <div class="settings-section">
+                    <div class="form-group">
+                        <label for="lcd-brightness">Jas podsvietenia LCD:</label>
+                        <div class="slider-group">
+                            <input type="range" id="lcd-brightness" min="0" max="100" value="80" class="slider">
+                            <span id="brightness-value">80%</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lcd-contrast">Kontrast LCD:</label>
+                        <div class="slider-group">
+                            <input type="range" id="lcd-contrast" min="0" max="100" value="50" class="slider">
+                            <span id="contrast-value">50%</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="lcd-backlight" checked>
+                            Podsvietenie zapnuté
+                        </label>
+                    </div>
+
+                    <div class="lcd-test">
+                        <h4>Test LCD</h4>
+                        <div class="form-group">
+                            <input type="text" id="lcd-test-line1" placeholder="Riadok 1" value="Test LCD" class="form-control">
+                            <input type="text" id="lcd-test-line2" placeholder="Riadok 2" value="Zavlahovy system" class="form-control">
+                            <button class="btn btn-secondary" id="test-lcd">Zobraziť testovaciu správu</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sieťové nastavenia -->
+            <div class="card">
+                <h2>🌐 Sieťové nastavenia</h2>
+                
+                <div class="settings-section">
+                    <div class="form-group">
+                        <label for="web-port">Web server port:</label>
+                        <input type="number" id="web-port" min="1024" max="65535" value="5000" class="form-control">
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="remote-access">
+                            Povoliť vzdialený prístup (z internetu)
+                        </label>
+                        <small class="form-text">Pozor: Vyžaduje bezpečnostné nastavenia!</small>
+                    </div>
+
+                    <div class="network-info">
+                        <h4>Sieťové informácie</h4>
+                        <div class="info-row">
+                            <span class="label">IP adresa:</span>
+                            <span class="value" id="ip-address">---</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">MAC adresa:</span>
+                            <span class="value" id="mac-address">---</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Hostname:</span>
+                            <span class="value" id="hostname">---</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Systémové nastavenia -->
+            <div class="card">
+                <h2>🔒 Systémové nastavenia</h2>
+                
+                <div class="settings-section">
+                    <div class="form-group">
+                        <label for="log-level">Úroveň logovania:</label>
+                        <select id="log-level" class="form-control">
+                            <option value="DEBUG">DEBUG (všetko)</option>
+                            <option value="INFO" selected>INFO (odporúčané)</option>
+                            <option value="WARNING">WARNING (iba upozornenia)</option>
+                            <option value="ERROR">ERROR (iba chyby)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="auto-start">Automatické spustenie pri štarte RPi:</label>
+                        <select id="auto-start" class="form-control">
+                            <option value="yes">Áno, spustiť automaticky</option>
+                            <option value="no">Nie, spúšťať manuálne</option>
+                        </select>
+                    </div>
+
+                    <div class="system-actions">
+                        <h4>Systémové akcie</h4>
+                        <div class="action-buttons">
+                            <button class="btn btn-warning" id="restart-app">↻ Reštartovať aplikáciu</button>
+                            <button class="btn btn-danger" id="shutdown-pi">⏻ Vypnúť Raspberry Pi</button>
+                            <button class="btn btn-danger" id="reboot-pi">↺ Reštartovať Raspberry Pi</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export/Import nastavení -->
+            <div class="card">
+                <h2>💾 Export / Import nastavení</h2>
+                
+                <div class="settings-section">
+                    <div class="button-group">
+                        <button class="btn btn-primary" id="export-settings">
+                            📤 Exportovať nastavenia do súboru
+                        </button>
+                        <button class="btn btn-secondary" id="import-settings">
+                            📥 Importovať nastavenia zo súboru
+                        </button>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-warning" id="reset-to-defaults">
+                            ⚠️ Obnoviť predvolené nastavenia
+                        </button>
+                    </div>
+
+                    <input type="file" id="import-file" accept=".json" style="display: none;">
+                </div>
+            </div>
+
+            <!-- Info o systéme -->
+            <div class="card">
+                <h2>ℹ️ Informácie o systéme</h2>
+                
+                <div class="system-info-grid">
+                    <div class="info-row">
+                        <span class="label">Verzia systému:</span>
+                        <span class="value" id="system-version">1.0.0</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Python verzia:</span>
+                        <span class="value" id="python-version">---</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Flask verzia:</span>
+                        <span class="value" id="flask-version">---</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Uptime systému:</span>
+                        <span class="value" id="uptime">---</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Teplota CPU:</span>
+                        <span class="value" id="cpu-temp">---</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Voľná RAM:</span>
+                        <span class="value" id="free-ram">---</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Voľné miesto na SD karte:</span>
+                        <span class="value" id="free-disk">---</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Uložiť všetky nastavenia -->
+            <div class="save-bar">
+                <button class="btn btn-success btn-large" id="save-all-settings">
+                    💾 Uložiť všetky nastavenia
+                </button>
+                <span id="save-status" class="save-status"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Potvrdzovací dialog -->
+    <div id="confirmDialog" class="modal">
+        <div class="modal-content small">
+            <h3>Potvrdenie akcie</h3>
+            <p id="confirmMessage">Ste si istý?</p>
+            <div class="modal-buttons">
+                <button class="btn btn-success" id="confirmYes">Áno</button>
+                <button class="btn btn-secondary" id="confirmNo">Nie</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifikácia -->
+    <div id="notification" class="notification" style="display: none;"></div>
+
+    <script src="/static/js/settings.js"></script>
+</body>
+</html>

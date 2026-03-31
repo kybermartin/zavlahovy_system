@@ -1,0 +1,291 @@
+<!-- web/templates/schedule.html -->
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zavlažovací systém - Plány</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/schedule.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📅 Plány zavlažovania</h1>
+            <div class="datetime" id="current-datetime">--.--.---- --:--:--</div>
+        </header>
+
+        <nav class="main-nav">
+            <a href="/">Dashboard</a>
+            <a href="/schedule" class="active">Plány</a>
+            <a href="/manual">Manuálne ovládanie</a>
+            <a href="/settings">Nastavenia</a>
+        </nav>
+
+        <div class="schedule-container">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Denné intervaly zavlažovania</h2>
+                    <button class="btn btn-primary" id="saveAllBtn">💾 Uložiť všetky zmeny</button>
+                </div>
+                
+                <div class="info-box">
+                    <p>⏰ Nastavte 4 denné intervaly. Intervaly sa opakujú každý deň rovnako.</p>
+                    <p>💧 Každý interval môže mať vlastný okruh a tlak (0-100%).</p>
+                </div>
+
+                <!-- Interval 1 -->
+                <div class="interval-card" id="interval1">
+                    <div class="interval-header">
+                        <h3>📌 Interval 1</h3>
+                        <label class="switch">
+                            <input type="checkbox" class="interval-active" data-id="1" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="interval-content">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Čas štartu:</label>
+                                <input type="time" class="interval-start" data-id="1" value="06:00">
+                            </div>
+                            <div class="form-group">
+                                <label>Čas ukončenia:</label>
+                                <input type="time" class="interval-stop" data-id="1" value="06:30">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Okruh:</label>
+                                <select class="interval-okruh" data-id="1">
+                                    <option value="1" selected>Okruh 1</option>
+                                    <option value="2">Okruh 2</option>
+                                    <option value="3">Okruh 3</option>
+                                    <option value="4">Okruh 4</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Tlak: <span class="pressure-value" id="pressure1">80%</span></label>
+                                <input type="range" class="interval-pressure" data-id="1" min="0" max="100" value="80" step="5">
+                            </div>
+                        </div>
+                        
+                        <div class="preview-box" id="preview1">
+                            <span class="preview-label">Náhľad:</span>
+                            <span class="preview-text">06:00 - 06:30 | Okruh 1 | 80%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interval 2 -->
+                <div class="interval-card" id="interval2">
+                    <div class="interval-header">
+                        <h3>📌 Interval 2</h3>
+                        <label class="switch">
+                            <input type="checkbox" class="interval-active" data-id="2" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="interval-content">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Čas štartu:</label>
+                                <input type="time" class="interval-start" data-id="2" value="18:00">
+                            </div>
+                            <div class="form-group">
+                                <label>Čas ukončenia:</label>
+                                <input type="time" class="interval-stop" data-id="2" value="18:30">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Okruh:</label>
+                                <select class="interval-okruh" data-id="2">
+                                    <option value="1">Okruh 1</option>
+                                    <option value="2" selected>Okruh 2</option>
+                                    <option value="3">Okruh 3</option>
+                                    <option value="4">Okruh 4</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Tlak: <span class="pressure-value" id="pressure2">70%</span></label>
+                                <input type="range" class="interval-pressure" data-id="2" min="0" max="100" value="70" step="5">
+                            </div>
+                        </div>
+                        
+                        <div class="preview-box" id="preview2">
+                            <span class="preview-label">Náhľad:</span>
+                            <span class="preview-text">18:00 - 18:30 | Okruh 2 | 70%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interval 3 -->
+                <div class="interval-card" id="interval3">
+                    <div class="interval-header">
+                        <h3>📌 Interval 3</h3>
+                        <label class="switch">
+                            <input type="checkbox" class="interval-active" data-id="3">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="interval-content">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Čas štartu:</label>
+                                <input type="time" class="interval-start" data-id="3" value="12:00">
+                            </div>
+                            <div class="form-group">
+                                <label>Čas ukončenia:</label>
+                                <input type="time" class="interval-stop" data-id="3" value="12:30">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Okruh:</label>
+                                <select class="interval-okruh" data-id="3">
+                                    <option value="1" selected>Okruh 1</option>
+                                    <option value="2">Okruh 2</option>
+                                    <option value="3">Okruh 3</option>
+                                    <option value="4">Okruh 4</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Tlak: <span class="pressure-value" id="pressure3">50%</span></label>
+                                <input type="range" class="interval-pressure" data-id="3" min="0" max="100" value="50" step="5">
+                            </div>
+                        </div>
+                        
+                        <div class="preview-box" id="preview3">
+                            <span class="preview-label">Náhľad:</span>
+                            <span class="preview-text">12:00 - 12:30 | Okruh 1 | 50%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interval 4 -->
+                <div class="interval-card" id="interval4">
+                    <div class="interval-header">
+                        <h3>📌 Interval 4</h3>
+                        <label class="switch">
+                            <input type="checkbox" class="interval-active" data-id="4">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="interval-content">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Čas štartu:</label>
+                                <input type="time" class="interval-start" data-id="4" value="15:00">
+                            </div>
+                            <div class="form-group">
+                                <label>Čas ukončenia:</label>
+                                <input type="time" class="interval-stop" data-id="4" value="15:30">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Okruh:</label>
+                                <select class="interval-okruh" data-id="4">
+                                    <option value="1">Okruh 1</option>
+                                    <option value="2">Okruh 2</option>
+                                    <option value="3">Okruh 3</option>
+                                    <option value="4" selected>Okruh 4</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Tlak: <span class="pressure-value" id="pressure4">60%</span></label>
+                                <input type="range" class="interval-pressure" data-id="4" min="0" max="100" value="60" step="5">
+                            </div>
+                        </div>
+                        
+                        <div class="preview-box" id="preview4">
+                            <span class="preview-label">Náhľad:</span>
+                            <span class="preview-text">15:00 - 15:30 | Okruh 4 | 60%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tlačidlá -->
+                <div class="action-buttons">
+                    <button class="btn btn-success" id="saveSchedule">✅ Uložiť plán</button>
+                    <button class="btn btn-secondary" id="resetSchedule">↻ Obnoviť predvolené</button>
+                    <button class="btn btn-info" id="checkConflicts">⚠️ Skontrolovať kolízie</button>
+                </div>
+            </div>
+
+            <!-- Zoznam aktívnych plánov -->
+            <div class="card active-schedule-card">
+                <h2>📋 Aktívne plány dnes</h2>
+                <div id="activeScheduleList">
+                    <table class="schedule-table">
+                        <thead>
+                            <tr>
+                                <th>Interval</th>
+                                <th>Čas</th>
+                                <th>Okruh</th>
+                                <th>Tlak</th>
+                                <th>Stav</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scheduleTableBody">
+                            <tr>
+                                <td>1</td>
+                                <td>06:00 - 06:30</td>
+                                <td>Okruh 1</td>
+                                <td>80%</td>
+                                <td><span class="badge badge-success">Aktívny</span></td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>18:00 - 18:30</td>
+                                <td>Okruh 2</td>
+                                <td>70%</td>
+                                <td><span class="badge badge-success">Aktívny</span></td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>--:-- - --:--</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td><span class="badge badge-inactive">Neaktívny</span></td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>--:-- - --:--</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td><span class="badge badge-inactive">Neaktívny</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pre kolízie -->
+    <div id="conflictModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>⚠️ Kolízia intervalov</h2>
+            <div id="conflictMessage"></div>
+        </div>
+    </div>
+
+    <script src="/static/js/schedule.js"></script>
+</body>
+</html>
