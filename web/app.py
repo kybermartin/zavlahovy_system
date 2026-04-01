@@ -7,6 +7,7 @@ from flask import Flask, render_template, jsonify, request, redirect, url_for
 import json
 from datetime import datetime
 import time
+import subprocess
 import os
 import sys
 
@@ -281,3 +282,50 @@ def init_app(pump, plan):
     irrigation_plan = plan
     
     print("Web aplikácia inicializovaná")
+
+@app.route('/api/system/shutdown', methods=['POST'])
+def api_shutdown():
+    """Vypnutie Raspberry Pi"""
+    try:
+        # Spustenie vypnutia s oneskorením 1 sekunda (aby sa stihla odpoveď)
+        subprocess.Popen(['sudo', 'shutdown', '-h', 'now'])
+        return jsonify({'status': 'ok', 'message': 'Systém sa vypína...'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/system/reboot', methods=['POST'])
+def api_reboot():
+    """Reštart Raspberry Pi"""
+    try:
+        subprocess.Popen(['sudo', 'reboot'])
+        return jsonify({'status': 'ok', 'message': 'Systém sa reštartuje...'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/system/autostart', methods=['POST'])
+def api_set_autostart():
+    """Povoliť/zakázať automatické spustenie služby"""
+    data = request.json
+    enable = data.get('enable', True)
+    try:
+        if enable:
+            subprocess.run(['sudo', 'systemctl', 'enable', 'zavlahovy_system.service'], check=True)
+            subprocess.run(['sudo', 'systemctl', 'start', 'zavlahovy_system.service'], check=True)
+        else:
+            subprocess.run(['sudo', 'systemctl', 'disable', 'zavlahovy_system.service'], check=True)
+            subprocess.run(['sudo', 'systemctl', 'stop', 'zavlahovy_system.service'], check=True)
+        return jsonify({'status': 'ok', 'enabled': enable})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/system/autostart-status', methods=['GET'])
+def api_autostart_status():
+    """Získa aktuálny stav automatického spustenia"""
+    try:
+        result = subprocess.run(['systemctl', 'is-enabled', 'zavlahovy_system.service'],
+                                capture_output=True, text=True)
+        enabled = result.stdout.strip() == 'enabled'
+        return jsonify({'enabled': enabled})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+        

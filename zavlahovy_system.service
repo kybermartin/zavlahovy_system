@@ -1,0 +1,17 @@
+[Unit]
+Description=Zavlahový systém
+After=network.target i2c.target
+
+[Service]
+Type=simple
+User=kybermartin
+WorkingDirectory=/home/kybermartin/zavlahovy_system
+ExecStart=/home/kybermartin/zavlahovy_system/venv/bin/python3 /home/kybermartin/zavlahovy_system/main.py
+Restart=on-failure
+RestartSec=10
+
+# Voliteľné: explicitne nastavíme PATH na venv
+Environment=PATH=/home/kybermartin/zavlahovy_system/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+[Install]
+WantedBy=multi-user.target

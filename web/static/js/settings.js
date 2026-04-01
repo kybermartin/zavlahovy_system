@@ -6,6 +6,9 @@ let pendingAction = null;
 
 $(document).ready(function() {
     loadSettings();
+    // Načítanie stavu auto‑startu
+    loadAutoStartStatus();
+
     setupEventListeners();
 	setupModalListeners();
     updateDateTime();
@@ -43,8 +46,13 @@ function setupEventListeners() {
     $('#import-settings').click(() => $('#import-file').click());
     $('#import-file').change(importSettings);
     $('#reset-to-defaults').click(resetToDefaults);
+
     
     // Systémové akcie
+    $('#auto-start').change(function() {
+        const value = $(this).val();
+        saveAutoStartSetting(value);
+    });
     $('#restart-app').click(() => showConfirm('Reštartovať aplikáciu?', restartApp));
     $('#shutdown-pi').click(() => showConfirm('VYPNOŤ Raspberry Pi?', shutdownPi, true));
     $('#reboot-pi').click(() => showConfirm('REŠTARTOVAŤ Raspberry Pi?', rebootPi, true));
@@ -497,7 +505,16 @@ function restartApp() {
 
 function shutdownPi() {
     showNotification('Vypínam Raspberry Pi...', 'warning');
-    // V reálnom systéme by tu bol API call
+    $.ajax({
+            url: '/api/system/shutdown',
+            method: 'POST',
+            success: function() {
+                // Žiadna odpoveď – systém sa vypína
+            },
+            error: function() {
+                showNotification('Chyba pri vypínaní', 'error');
+            }
+    });
     setTimeout(() => {
         showNotification('Systém vypnutý', 'success');
     }, 5000);
@@ -505,7 +522,17 @@ function shutdownPi() {
 
 function rebootPi() {
     showNotification('Reštartujem Raspberry Pi...', 'warning');
-    // V reálnom systéme by tu bol API call
+    $.ajax({
+            url: '/api/system/reboot',
+            method: 'POST',
+            success: function() {
+                // Žiadna odpoveď – systém sa reštartuje
+            },
+            error: function() {
+                showNotification('Chyba pri reštarte', 'error');
+            }
+    });
+    
     setTimeout(() => {
         showNotification('Systém sa reštartuje', 'success');
     }, 5000);
@@ -576,3 +603,53 @@ function showLoader() {
 function hideLoader() {
     $('#loader').remove();
 }
+
+// Načítanie stavu auto‑startu z API
+function loadAutoStartStatus() {
+    $.ajax({
+        url: '/api/system/autostart-status',
+        method: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            const select = $('#auto-start');
+            if (data.enabled) {
+                select.val('yes');
+                $('#auto-start-status').html('<span class="status-ok">✅ Auto‑start zapnutý</span>');
+            } else {
+                select.val('no');
+                $('#auto-start-status').html('<span class="status-error">❌ Auto‑start vypnutý</span>');
+            }
+        },
+        error: function() {
+            $('#auto-start-status').html('<span class="status-error">❌ Nepodarilo sa načítať stav auto‑startu</span>');
+        }
+    });
+}
+
+// Uloženie nastavenia auto‑startu pri zmene selectu
+function saveAutoStartSetting(value) {
+    const enable = (value === 'yes');
+    showConfirm(`Nastaviť automatické spúšťanie systému pri štarte na ${enable ? 'ZAPNUTÉ' : 'VYPNUTÉ'}?`, function() {
+        $.ajax({
+            url: '/api/system/autostart',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ enable: enable }),
+            success: function(response) {
+                showNotification(`Auto‑start ${response.enabled ? 'zapnutý' : 'vypnutý'}`, 'success');
+                loadAutoStartStatus(); // obnoví zobrazenie
+            },
+            error: function(xhr) {
+                let msg = 'Chyba pri zmene auto‑startu';
+                try {
+                    const resp = JSON.parse(xhr.responseText);
+                    if (resp.error) msg = resp.error;
+                } catch(e) {}
+                showNotification(msg, 'error');
+                loadAutoStartStatus(); // vráti pôvodný stav
+            }
+        });
+    }, false);
+}
+
+
