@@ -37,13 +37,14 @@ class LCDHandler:
         self.cols = cols
         self.rows = rows
         self.backlight = True
+        self.bus = None
+        self.initialized = False
         
         try:
             self.bus = smbus2.SMBus(bus_num)
             self.initialized = True
-        except:
-            print("Chyba: Nepodarilo sa pripojiť k I2C zbernici")
-            self.initialized = False
+        except Exception as e:
+            print(f"Chyba: Nepodarilo sa pripojiť k I2C zbernici: {e}")
             return
     
     def init_display(self):
@@ -145,7 +146,15 @@ class LCDHandler:
         """
         self.backlight = state
         # Pošleme prázdny byte pre aktualizáciu podsvietenia
-        self._write_byte(0x00, 0)
+        if self.bus is not None and self.initialized:
+            try:
+                self._write_byte(0x00, 0)
+            except Exception:
+                # Počas čistenia ignorujeme chybu
+                if hasattr(self, '_cleaning'):
+                    pass
+                else:
+                    raise
     
     def _write_string(self, text):
         """Zápis reťazca na aktuálnu pozíciu"""
@@ -190,16 +199,31 @@ class LCDHandler:
             data |= self.LCD_BACKLIGHT_BIT
         
         # Odošleme s Enable=1
-        self.bus.write_byte(self.addr, data)
+        try:
+            self.bus.write_byte(self.addr, data)
+        except Exception:
+            if hasattr(self, '_cleaning'):
+                return
+            raise
         time.sleep(0.000001)
         
         # Odošleme s Enable=0
-        self.bus.write_byte(self.addr, data & ~self.LCD_ENABLE_BIT)
+        try:
+            self.bus.write_byte(self.addr, data & ~self.LCD_ENABLE_BIT)
+        except Exception:
+            if hasattr(self, '_cleaning'):
+                return
+            raise
         time.sleep(0.00005)
     
     def __del__(self):
         """Čistenie pri ukončení"""
-        if hasattr(self, 'bus'):
-            self.clear()
-            self.set_backlight(False)
-            self.bus.close()
+        self._cleaning = True
+        try:
+            if hasattr(self, 'bus') and self.bus and self.initialized:
+                self.clear()
+                self.set_backlight(False)
+                self.bus.close()
+        except Exception:
+            # Ignorujeme všetky chyby počas ukončovania
+            pass
