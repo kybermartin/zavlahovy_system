@@ -1,0 +1,9 @@
+# data/settings.json (predvolené nastavenia)
+{
+    "tlakove_auto_mode": true,
+    "nasavacie_auto_mode": true,
+    "timezone": "Europe/Bratislava",
+    "lcd_brightness": 50,
+    "dry_run_protection": true,
+    "last_updated": "2026-03-16 12:00:00"
+}

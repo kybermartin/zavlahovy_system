@@ -80,6 +80,44 @@ function setupModalListeners(){
 
 function loadSettings() {
     showLoader();
+
+    // Načítanie času a RTC stavu
+    $.ajax({
+        url: '/api/time',
+        method: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            $('#current-system-time').text(data.datetime);
+            $('#timezone-info').text(`${data.timezone} (UTC${data.utc_offset >= 0 ? '+' : ''}${data.utc_offset})`);
+            $('#is-dst').text(data.is_dst ? 'Áno (letný čas)' : 'Nie (zimný čas)');
+            
+            // Zobrazenie RTC stavu
+            if (data.rtc && data.rtc.connected) {
+                $('#rtc-status').html('<span class="status-ok">✅ Pripojený</span>');
+                $('#rtc-device').text(data.rtc.device || '/dev/rtc0');
+            } else {
+                $('#rtc-status').html('<span class="status-error">❌ Nepripojený</span>');
+                $('#rtc-device').text('-');
+            }
+        },
+        error: function() {
+            $('#current-system-time').text('Chyba načítania');
+        }
+    });
+    
+    // Načítanie RTC detailov
+    $.ajax({
+        url: '/api/rtc/status',
+        method: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            if (data.connected) {
+                $('#rtc-time').text(data.local || data.utc || '---');
+            } else {
+                $('#rtc-time').text('Nedostupný');
+            }
+        }
+    });
     
     // Načítať nastavenia z API
     $.ajax({

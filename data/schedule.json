@@ -1,0 +1,36 @@
+{
+  "intervals": [
+    {
+      "id": 1,
+      "start": "14:09",
+      "stop": "14:10",
+      "okruh": 1,
+      "tlak": 80,
+      "aktivny": true
+    },
+    {
+      "id": 2,
+      "start": "18:00",
+      "stop": "18:30",
+      "okruh": 2,
+      "tlak": 70,
+      "aktivny": true
+    },
+    {
+      "id": 3,
+      "start": "12:00",
+      "stop": "12:30",
+      "okruh": 1,
+      "tlak": 50,
+      "aktivny": false
+    },
+    {
+      "id": 4,
+      "start": "15:00",
+      "stop": "15:30",
+      "okruh": 4,
+      "tlak": 60,
+      "aktivny": false
+    }
+  ]
+}

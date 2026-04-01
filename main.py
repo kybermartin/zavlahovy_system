@@ -49,10 +49,13 @@ class IrrigationSystem:
     def init_hardware(self):
         """Inicializácia všetkých hardvérových komponentov"""
         try:
-            # RTC modul
+            # RTC modul (používa sysfs / hwclock)
             self.rtc = RTCHandler()
-            self.rtc.set_system_time_from_rtc()
-            print("✓ RTC inicializované")
+            if self.rtc.initialized:
+                self.rtc.set_system_time_from_rtc()
+                print("✓ Systémový čas nastavený podľa RTC")
+            else:
+                print("⚠️ RTC modul nedostupný, používam softvérový čas")
             
             # LCD displej
             self.lcd = LCDHandler()
@@ -67,16 +70,21 @@ class IrrigationSystem:
             
             # Servá pre ventily
             self.serva = []
+            transition_time = 3.0  # 3 sekundy na celý rozsah
             for i, pin in enumerate(config.SERVO_PINS):
-                servo = ServoController(pin, i+1)
+                servo = ServoController(pin, i+1, transition_time=transition_time)
                 self.serva.append(servo)
-            print("✓ Servá inicializované")
+            print(f"✓ Servá inicializované (čas prechodu: {transition_time}s)")
             
             # Hladinové senzory
-            self.level_sensors = [
-                LevelSensor(config.LEVEL_SENSOR_SPODNY_PIN, "spodny"),
-                LevelSensor(config.LEVEL_SENSOR_HORNY_PIN, "horny")
-            ]
+            self.level_sensor = LevelSensor(
+                pin_min=config.LEVEL_SENSOR_MIN_PIN,   # GPIO pre minimálnu hladinu
+                pin_max=config.LEVEL_SENSOR_MAX_PIN,   # GPIO pre maximálnu hladinu
+                name="hladina",
+                debounce_time=0.1
+            )
+            # Pre kompatibilitu s pump_controller (očakáva list)
+            self.level_sensors = [self.level_sensor]
             print("✓ Hladinové senzory inicializované")
             
         except Exception as e:

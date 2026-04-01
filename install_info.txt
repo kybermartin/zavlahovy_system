@@ -1,0 +1,6 @@
+Dátum inštalácie: Mon 16 Mar 23:22:24 CET 2026
+Používateľ: kybermartin
+Python: Python 3.13.5
+Pip: pip 26.0.1 from /home/kybermartin/zavlahovy_system/venv/lib/python3.13/site-packages/pip (python 3.13)
+Virtuálne prostredie: /home/kybermartin/zavlahovy_system/venv
+Web port: 5000

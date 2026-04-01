@@ -1,0 +1,13 @@
+# Závislosti pre zavlažovací systém
+# Vygenerované: Mon 16 Mar 23:22:05 CET 2026
+
+RPi.GPIO>=0.7.0
+smbus2>=0.4.0
+flask>=2.0.0
+python-dotenv>=0.19.0
+gpiozero>=1.6.0
+flask-cors>=3.0.10
+waitress>=2.1.0
+gunicorn>=20.1.0
+psutil>=5.8.0
+schedule>=1.1.0

@@ -618,3 +618,23 @@
 .modal-container.emergency .modal-close:hover {
     color: white;
 }
+
+
+.rtc-info .status-ok {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.rtc-info .status-error {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.current-time-info {
+    background: #f8f9fa;
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-top: 10px;
+    font-size: 13px;
+    color: #6c757d;
+}

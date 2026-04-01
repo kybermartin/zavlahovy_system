@@ -54,6 +54,8 @@
                         </select>
                     </div>
 
+                    
+
                     <div class="rtc-info">
                         <h3>RTC modul DS3231</h3>
                         <div class="info-row">
@@ -61,11 +63,24 @@
                             <span class="value" id="rtc-status">---</span>
                         </div>
                         <div class="info-row">
+                            <span class="label">Zariadenie:</span>
+                            <span class="value" id="rtc-device">---</span>
+                        </div>
+                        <div class="info-row">
                             <span class="label">Čas na RTC:</span>
                             <span class="value" id="rtc-time">---</span>
                         </div>
+                        <div class="info-row">
+                            <span class="label">Časová zóna:</span>
+                            <span class="value" id="timezone-info">---</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Letný čas:</span>
+                            <span class="value" id="is-dst">---</span>
+                        </div>
                         <button class="btn btn-secondary" id="sync-rtc">↻ Synchronizovať RTC s časom RPi</button>
                     </div>
+                    
                 </div>
             </div>
 
@@ -363,13 +378,18 @@
     </div>
 
     <!-- Potvrdzovací dialog -->
-    <div id="confirmDialog" class="modal">
-        <div class="modal-content small">
-            <h3>Potvrdenie akcie</h3>
-            <p id="confirmMessage">Ste si istý?</p>
-            <div class="modal-buttons">
-                <button class="btn btn-success" id="confirmYes">Áno</button>
+    <div id="confirmDialog" class="modal-overlay" style="display: none;">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Potvrdenie akcie</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage">Ste si istý?</p>
+            </div>
+            <div class="modal-footer">
                 <button class="btn btn-secondary" id="confirmNo">Nie</button>
+                <button class="btn btn-success" id="confirmYes">Áno</button>
             </div>
         </div>
     </div>

@@ -17,9 +17,9 @@ RELAY_NASAVACIE_PIN = 25    # GPIO25 - nasávacie čerpadlo
 # Servá pre ventily (PWM piny)
 SERVO_PINS = [17, 18, 22, 23]  # GPIO17,18,22,23 pre okruhy 1-4
 
-# Hladinové senzory (digitálne vstupy)
-LEVEL_SENSOR_SPODNY_PIN = 26   # GPIO26 - spodný senzor (suchý chod)
-LEVEL_SENSOR_HORNY_PIN = 27    # GPIO27 - horný senzor (plná nádrž)
+# Hladinové senzory (zjednodušená verzia)
+LEVEL_SENSOR_MIN_PIN = 26    # GPIO26 - spínač minimálnej hladiny (prázdna)
+LEVEL_SENSOR_MAX_PIN = 27    # GPIO27 - spínač maximálnej hladiny (plná)
 
 # I2C zariadenia (adresy)
 LCD_I2C_ADDR = 0x27         # Adresa LCD 1602A cez I2C (často 0x27 alebo 0x3F)

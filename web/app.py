@@ -6,8 +6,13 @@ Flask webová aplikácia pre ovládanie zavlažovacieho systému.
 from flask import Flask, render_template, jsonify, request, redirect, url_for
 import json
 from datetime import datetime
+import time
 import os
 import sys
+
+
+
+
 
 # Pridanie cesty pre import modulov
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -21,6 +26,21 @@ app = Flask(__name__)
 # Tieto sa nastavia pri štarte z main.py
 pump_controller = None
 irrigation_plan = None
+
+# Pomocná funkcia
+def get_local_time():
+    """Získa lokálny čas (najprv z RTC, potom zo systému)"""
+    pump = pump_controller
+    
+    # Skúsime získať čas z RTC cez pump_controller
+    if pump and hasattr(pump, 'rtc') and pump.rtc and pump.rtc.initialized:
+        local_time = pump.rtc.read_rtc_local()
+        if local_time:
+            return local_time
+    
+    # Fallback na systémový čas
+    return datetime.now()
+
 
 @app.route('/')
 def index():
@@ -39,7 +59,7 @@ def api_status():
     ventily = pump_controller.get_valve_states()
     
     # Aktuálny čas
-    now = datetime.now()
+    now = get_local_time()
     
     # Nájdenie aktívneho intervalu v pláne
     active_plan = None
@@ -180,6 +200,44 @@ def api_control_valve():
     
     return jsonify({'error': 'Neplatná akcia'}), 400
 
+@app.route('/api/time')
+def api_time():
+    """API pre získanie aktuálneho lokálneho času"""
+    now = get_local_time()
+    
+    # Získanie informácií o RTC
+    pump =  pump_controller
+    rtc_info = None
+    if pump and hasattr(pump, 'rtc') and pump.rtc:
+        rtc_info = {
+            'connected': pump.rtc.initialized,
+            'device': pump.rtc.rtc_device if pump.rtc.initialized else None
+        }
+    
+    return jsonify({
+        'datetime': now.strftime('%Y-%m-%d %H:%M:%S'),
+        'date': now.strftime('%d.%m.%Y'),
+        'time': now.strftime('%H:%M:%S'),
+        'timestamp': now.timestamp(),
+        'timezone': time.tzname,
+        'utc_offset': time.timezone // -3600,
+        'is_dst': time.localtime().tm_isdst,
+        'rtc': rtc_info
+    })
+
+
+@app.route('/api/rtc/status')
+def api_rtc_status():
+    """API pre získanie stavu RTC modulu"""
+    pump =  pump_controller
+    
+    if not pump or not hasattr(pump, 'rtc'):
+        return jsonify({'error': 'RTC handler nedostupný'}), 500
+    
+    rtc = pump.rtc
+    return jsonify(rtc.get_status())
+    
+
 @app.route('/api/time', methods=['POST'])
 def api_set_time():
     """API pre nastavenie systémového času"""
@@ -221,14 +279,5 @@ def init_app(pump, plan):
     global pump_controller, irrigation_plan
     pump_controller = pump
     irrigation_plan = plan
-    
-    # Vytvorenie priečinkov pre šablóny ak neexistujú
-    templates_dir = os.path.join(os.path.dirname(__file__), 'templates')
-    static_dir = os.path.join(os.path.dirname(__file__), 'static')
-    
-    os.makedirs(templates_dir, exist_ok=True)
-    os.makedirs(static_dir, exist_ok=True)
-    os.makedirs(os.path.join(static_dir, 'css'), exist_ok=True)
-    os.makedirs(os.path.join(static_dir, 'js'), exist_ok=True)
     
     print("Web aplikácia inicializovaná")
