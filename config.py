@@ -17,9 +17,9 @@ RELAY_NASAVACIE_PIN = 25    # GPIO25 - nasávacie čerpadlo
 # Servá pre ventily (PWM piny)
 SERVO_PINS = [17, 18, 22, 23]  # GPIO17,18,22,23 pre okruhy 1-4
 
-# Hladinové senzory (zjednodušená verzia)
-LEVEL_SENSOR_MIN_PIN = 26    # GPIO26 - spínač minimálnej hladiny (prázdna)
-LEVEL_SENSOR_MAX_PIN = 27    # GPIO27 - spínač maximálnej hladiny (plná)
+# Hladinové senzory (zjednodušená verzia - min a max)
+LEVEL_SENSOR_MIN_PIN = 26   # GPIO26 - spínač minimálnej hladiny (prázdna nádrž)
+LEVEL_SENSOR_MAX_PIN = 27   # GPIO27 - spínač maximálnej hladiny (plná nádrž)
 
 # I2C zariadenia (adresy)
 LCD_I2C_ADDR = 0x27         # Adresa LCD 1602A cez I2C (často 0x27 alebo 0x3F)
@@ -39,7 +39,8 @@ SERVO_OPEN_POS = 12.5       # Plne otvorený ventil
 # ============================================
 
 # Typ senzora: NO = normally open, NC = normally closed
-LEVEL_SENSOR_TYPE = "NO"    # NO = 1 keď je voda, NC = 0 keď je voda
+# Pre NC spínače: HIGH = suchý, LOW = mokrý
+LEVEL_SENSOR_TYPE = "NC"    # NC spínače (normálne zopnuté)
 
 # Čas oneskorenia pre ochranu pred suchým chodom (sekundy)
 DRY_RUN_PROTECTION_DELAY = 30  # Vypne po 30s suchého chodu
@@ -96,8 +97,8 @@ def validate_pins():
     all_pins = [
         RELAY_TLAKOVE_PIN,
         RELAY_NASAVACIE_PIN,
-        LEVEL_SENSOR_SPODNY_PIN,
-        LEVEL_SENSOR_HORNY_PIN
+        LEVEL_SENSOR_MIN_PIN,
+        LEVEL_SENSOR_MAX_PIN
     ] + SERVO_PINS
     
     # Skontrolujeme duplicity
@@ -118,4 +119,3 @@ try:
     validate_pins()
 except ValueError as e:
     print(f"Chyba v konfigurácii pinov: {e}")
-    
