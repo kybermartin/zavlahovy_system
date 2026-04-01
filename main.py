@@ -3,12 +3,17 @@
 Hlavný spúšťací súbor pre zavlažovací systém.
 Inicializuje všetky komponenty a spúšťa vlákna pre plánovač a web server.
 """
+
 import RPi.GPIO as GPIO
 import threading
 import time
 import signal
 import sys
 import os
+import warnings
+
+# Potlačenie warningov (voliteľné)
+warnings.filterwarnings("ignore")
 
 # Pridanie cesty pre import modulov
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -30,10 +35,8 @@ class IrrigationSystem:
         print("ZAVLAHOVACÍ SYSTÉM - ŠTART")
         print("=" * 50)
         
-        
-        
-        # Vypnutie warningov
-        GPIO.setwarnings(False)
+        # GPIO nastavenia
+        GPIO.setwarnings(False)  # Vypnutie warningov
         
         # Inicializácia hardvéru
         self.init_hardware()
@@ -45,7 +48,7 @@ class IrrigationSystem:
         self.running = True
         self.web_thread = None
         self.scheduler_thread = None
-        
+    
     def init_hardware(self):
         """Inicializácia všetkých hardvérových komponentov"""
         try:
@@ -64,31 +67,40 @@ class IrrigationSystem:
             print("✓ LCD inicializované")
             
             # Relé pre čerpadlá
-            self.relay_tlakove = RelayController(config.RELAY_TLAKOVE_PIN)
-            self.relay_nasavacie = RelayController(config.RELAY_NASAVACIE_PIN)
+            self.relay_tlakove = RelayController(
+                config.RELAY_TLAKOVE_PIN,
+                active_high=True,
+                name="tlakove_cerpadlo"
+            )
+            self.relay_nasavacie = RelayController(
+                config.RELAY_NASAVACIE_PIN,
+                active_high=True,
+                name="nasavacie_cerpadlo"
+            )
             print("✓ Relé moduly inicializované")
             
             # Servá pre ventily
             self.serva = []
-            transition_time = 3.0  # 3 sekundy na celý rozsah
             for i, pin in enumerate(config.SERVO_PINS):
-                servo = ServoController(pin, i+1, transition_time=transition_time)
+                servo = ServoController(pin, i+1, transition_time=2.0)
                 self.serva.append(servo)
-            print(f"✓ Servá inicializované (čas prechodu: {transition_time}s)")
+            print("✓ Servá inicializované")
             
-            # Hladinové senzory
+            # Hladinové senzory (zjednodušená verzia: min a max spínač)
             self.level_sensor = LevelSensor(
-                pin_min=config.LEVEL_SENSOR_MIN_PIN,   # GPIO pre minimálnu hladinu
-                pin_max=config.LEVEL_SENSOR_MAX_PIN,   # GPIO pre maximálnu hladinu
+                pin_min=config.LEVEL_SENSOR_MIN_PIN,
+                pin_max=config.LEVEL_SENSOR_MAX_PIN,
                 name="hladina",
                 debounce_time=0.1
             )
-            # Pre kompatibilitu s pump_controller (očakáva list)
+            # PumpController očakáva list senzorov, preto vytvoríme list
             self.level_sensors = [self.level_sensor]
-            print("✓ Hladinové senzory inicializované")
+            print("✓ Hladinový senzor inicializovaný")
             
         except Exception as e:
             print(f"✗ Chyba pri inicializácii hardvéru: {e}")
+            import traceback
+            traceback.print_exc()
             sys.exit(1)
     
     def init_core(self):
@@ -104,7 +116,8 @@ class IrrigationSystem:
                 self.relay_nasavacie,
                 self.serva,
                 self.level_sensors,
-                self.lcd
+                lcd=self.lcd,
+                rtc=self.rtc   # <-- pridáme RTC pre prístup k času
             )
             print("✓ Ovládač čerpadiel inicializovaný")
             
@@ -123,21 +136,14 @@ class IrrigationSystem:
     def start_web_server(self):
         """Spustenie Flask web serveru v samostatnom vlákne"""
         try:
-            """
-            web_app.config.update(
-                PUMP_CONTROLLER=self.pump_controller,
-                IRRIGATION_PLAN=self.irrigation_plan
-            )
-            """
             from web.app import app as web_app
             
-            # Nastavenie globálnych premenných
+            # Nastavenie globálnych referencií v web.app
             import web.app as web_module
             web_module.pump_controller = self.pump_controller
             web_module.irrigation_plan = self.irrigation_plan
-           
             
-            # Spustenie Flask serveru
+            # Spustenie servera (debug=False, use_reloader=False)
             web_app.run(
                 host=config.WEB_HOST,
                 port=config.WEB_PORT,
@@ -146,6 +152,8 @@ class IrrigationSystem:
             )
         except Exception as e:
             print(f"✗ Chyba pri spúšťaní web servera: {e}")
+            import traceback
+            traceback.print_exc()
     
     def run(self):
         """Spustenie hlavnej slučky systému"""
@@ -179,22 +187,30 @@ class IrrigationSystem:
     
     def update_lcd_display(self):
         """Aktualizácia informácií na LCD displeji"""
+        if not self.lcd:
+            return
+        
         # Získanie aktuálnych stavov
         tlakove_stav = self.pump_controller.get_tlakove_status()
         nasavacie_stav = self.pump_controller.get_nasavacie_status()
         active_interval = self.pump_controller.active_interval
         
+        # Získanie času z RTC (ak je k dispozícii)
+        if self.rtc and self.rtc.initialized:
+            cas = self.rtc.get_time_string()
+        else:
+            from datetime import datetime
+            cas = datetime.now().strftime("%H:%M")
+        
         # Formátovanie pre LCD (2 riadky po 16 znakov)
         if active_interval:
-            # Zobrazujeme bežiaci interval
-            row1 = f"{self.rtc.get_time_string()} OK{active_interval['okruh']}"
+            row1 = f"{cas} OK{active_interval['okruh']}"
             row2 = f"T:{tlakove_stav['text']} N:{nasavacie_stav['text']}"
         else:
-            # Zobrazujeme čakací režim
-            row1 = f"{self.rtc.get_time_string()} ZAVLAHA"
+            row1 = f"{cas} ZAVLAHA"
             row2 = f"T:{tlakove_stav['text']} N:{nasavacie_stav['text']}"
         
-        self.lcd.show_message(row1, row2)
+        self.lcd.show_message(row1[:16], row2[:16])
     
     def cleanup(self):
         """Vyčistenie a bezpečné ukončenie"""
@@ -207,11 +223,11 @@ class IrrigationSystem:
         self.lcd.clear()
         self.lcd.show_message("System stopped", "Dovidenia")
         
-        # VYČISTENIE VŠETKÝCH PINOV 
+        # Vyčistenie GPIO pinov
         try:
             GPIO.cleanup()
             print("✓ GPIO piny vyčistené")
-        except:
+        except Exception as e:
             print(f"Poznámka pri čistení GPIO: {e}")
         
         # Ukončenie
@@ -223,4 +239,3 @@ if __name__ == "__main__":
     # Spustenie systému
     system = IrrigationSystem()
     system.run()
-    
